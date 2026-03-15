@@ -1,0 +1,1423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cerebrate · Live Intelligence Terminal</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=JetBrains+Mono:wght@300;400;500&family=Syne:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+/* ── CONFIG NOTE: Replace these in config.js ── */
+:root {
+  --void: #03050D;
+  --surface: #080D1A;
+  --raised: #0D1425;
+  --card: #111C30;
+  --rim: rgba(255,255,255,0.07);
+  --rim2: rgba(255,255,255,0.12);
+  --gold: #C9A84C;
+  --gold-l: #E2C96A;
+  --gold-dim: rgba(201,168,76,0.12);
+  --emerald: #30C99A;
+  --emerald-dim: rgba(48,201,154,0.1);
+  --sapphire: #4E92EC;
+  --sapphire-dim: rgba(78,146,236,0.1);
+  --amber: #E8A535;
+  --amber-dim: rgba(232,165,53,0.1);
+  --coral: #E85555;
+  --coral-dim: rgba(232,85,85,0.1);
+  --violet: #9B74E8;
+  --text: #EEF2FF;
+  --text-2: #C4CBDE;
+  --text-3: #7A85A0;
+  --text-4: #3A4258;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:14px;scroll-behavior:smooth}
+body{background:var(--void);color:var(--text);font-family:'Syne',sans-serif;font-weight:400;min-height:100vh;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+
+/* Grid texture */
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(201,168,76,0.015) 1px,transparent 1px),linear-gradient(90deg,rgba(201,168,76,0.015) 1px,transparent 1px);background-size:48px 48px;pointer-events:none;z-index:0}
+
+/* ── HEADER ── */
+.header{position:sticky;top:0;z-index:100;background:rgba(3,5,13,0.92);backdrop-filter:blur(20px);border-bottom:1px solid var(--rim);padding:0 32px;display:flex;align-items:center;gap:24px;height:56px}
+.logo{display:flex;align-items:center;gap:8px;text-decoration:none}
+.logo-text{font-family:'Cormorant Garamond',serif;font-size:1.5rem;font-weight:700;color:var(--text);letter-spacing:-0.02em}
+.logo-dot{width:7px;height:7px;background:var(--gold);border-radius:50%;margin-bottom:6px}
+.header-sep{width:1px;height:24px;background:var(--rim2)}
+.header-tag{font-family:'JetBrains Mono',monospace;font-size:0.62rem;color:var(--text-3);letter-spacing:0.1em;text-transform:uppercase}
+.header-right{margin-left:auto;display:flex;align-items:center;gap:16px}
+.live-badge{display:flex;align-items:center;gap:6px;font-family:'JetBrains Mono',monospace;font-size:0.62rem;color:var(--emerald);background:var(--emerald-dim);border:1px solid rgba(48,201,154,0.2);padding:4px 10px;border-radius:4px}
+.pulse{width:6px;height:6px;border-radius:50%;background:var(--emerald);animation:pulse 2s ease infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:0.3;transform:scale(0.6)}}
+.market-time{font-family:'JetBrains Mono',monospace;font-size:0.65rem;color:var(--text-3)}
+
+/* ── NAV TABS ── */
+.nav-tabs{position:relative;z-index:1;display:flex;gap:0;border-bottom:1px solid var(--rim);padding:0 32px;background:var(--surface)}
+.nav-tab{padding:12px 20px;font-family:'JetBrains Mono',monospace;font-size:0.65rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-3);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all 0.2s;white-space:nowrap;background:none;border-top:none;border-left:none;border-right:none}
+.nav-tab:hover{color:var(--text-2)}
+.nav-tab.active{color:var(--gold);border-bottom-color:var(--gold)}
+
+/* ── MAIN LAYOUT ── */
+.main{position:relative;z-index:1;padding:24px 32px;max-width:1600px;margin:0 auto}
+
+/* ── CONFIG PANEL ── */
+.config-panel{background:var(--raised);border:1px solid var(--rim2);border-radius:12px;padding:24px;margin-bottom:24px}
+.config-title{font-family:'JetBrains Mono',monospace;font-size:0.65rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--gold);margin-bottom:16px}
+.config-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.config-field label{display:block;font-family:'JetBrains Mono',monospace;font-size:0.6rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-3);margin-bottom:6px}
+.config-field input{width:100%;background:var(--card);border:1px solid var(--rim2);border-radius:6px;padding:8px 12px;font-family:'JetBrains Mono',monospace;font-size:0.75rem;color:var(--text);outline:none;transition:border-color 0.2s}
+.config-field input:focus{border-color:var(--gold)}
+.config-save{margin-top:16px;background:var(--gold);color:var(--void);border:none;border-radius:6px;padding:8px 20px;font-family:'JetBrains Mono',monospace;font-size:0.65rem;letter-spacing:0.1em;text-transform:uppercase;cursor:pointer;font-weight:500;transition:all 0.2s}
+.config-save:hover{background:var(--gold-l)}
+.config-status{margin-top:10px;font-family:'JetBrains Mono',monospace;font-size:0.65rem;color:var(--emerald)}
+
+/* ── PORTFOLIO SUMMARY BAR ── */
+.portfolio-bar{display:grid;grid-template-columns:repeat(6,1fr);gap:12px;margin-bottom:24px}
+.pbar-item{background:var(--raised);border:1px solid var(--rim);border-radius:10px;padding:16px}
+.pbar-label{font-family:'JetBrains Mono',monospace;font-size:0.58rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-3);margin-bottom:6px}
+.pbar-value{font-family:'Cormorant Garamond',serif;font-size:1.8rem;font-weight:700;line-height:1;color:var(--text)}
+.pbar-sub{font-family:'JetBrains Mono',monospace;font-size:0.6rem;color:var(--text-3);margin-top:4px}
+.pbar-pos{color:var(--emerald)}
+.pbar-neg{color:var(--coral)}
+.pbar-neutral{color:var(--gold)}
+
+/* ── RUN MORNING BUTTON ── */
+.run-section{display:flex;align-items:center;gap:16px;margin-bottom:24px}
+.run-btn{display:flex;align-items:center;gap:10px;background:var(--gold);color:var(--void);border:none;border-radius:8px;padding:12px 24px;font-family:'JetBrains Mono',monospace;font-size:0.72rem;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;font-weight:500;transition:all 0.2s}
+.run-btn:hover{background:var(--gold-l);transform:translateY(-1px)}
+.run-btn:disabled{opacity:0.5;cursor:not-allowed;transform:none}
+.run-btn-icon{font-size:1rem}
+.monitor-btn{display:flex;align-items:center;gap:8px;background:transparent;color:var(--sapphire);border:1px solid rgba(78,146,236,0.3);border-radius:8px;padding:12px 24px;font-family:'JetBrains Mono',monospace;font-size:0.72rem;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;transition:all 0.2s}
+.monitor-btn:hover{background:var(--sapphire-dim)}
+.monitor-btn:disabled{opacity:0.5;cursor:not-allowed}
+.run-info{font-family:'JetBrains Mono',monospace;font-size:0.62rem;color:var(--text-3)}
+.run-info strong{color:var(--amber)}
+
+/* ── PROGRESS ── */
+.progress-wrap{background:var(--raised);border:1px solid var(--rim);border-radius:10px;padding:20px;margin-bottom:24px;display:none}
+.progress-wrap.show{display:block}
+.progress-title{font-family:'JetBrains Mono',monospace;font-size:0.65rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--gold);margin-bottom:12px}
+.progress-bar-outer{height:4px;background:var(--card);border-radius:2px;overflow:hidden;margin-bottom:12px}
+.progress-bar-inner{height:100%;background:linear-gradient(90deg,var(--gold),var(--emerald));border-radius:2px;transition:width 0.5s ease;width:0%}
+.progress-log{font-family:'JetBrains Mono',monospace;font-size:0.65rem;color:var(--text-2);line-height:2;max-height:120px;overflow-y:auto}
+.progress-log .log-item{display:flex;gap:10px}
+.log-time{color:var(--text-3)}
+.log-ok{color:var(--emerald)}
+.log-skip{color:var(--text-4)}
+.log-active{color:var(--amber)}
+
+/* ── GRID LAYOUTS ── */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.three-col{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+.full{grid-column:1/-1}
+
+/* ── SECTION HEADERS ── */
+.section-head{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+.section-title{font-family:'JetBrains Mono',monospace;font-size:0.65rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--text-3)}
+.section-title::after{content:'';flex:1;height:1px;background:var(--rim)}
+.section-count{font-family:'JetBrains Mono',monospace;font-size:0.6rem;background:var(--raised);border:1px solid var(--rim);padding:2px 8px;border-radius:3px;color:var(--text-3)}
+
+/* ── SIGNAL CARDS ── */
+.signals-grid{display:flex;flex-direction:column;gap:14px}
+.signal-card{background:var(--raised);border:1px solid var(--rim);border-radius:12px;overflow:hidden;transition:border-color 0.2s}
+.signal-card:hover{border-color:var(--rim2)}
+.signal-card.high-conf{border-left:3px solid var(--gold)}
+.signal-card.med-conf{border-left:3px solid var(--sapphire)}
+.sc-header{display:flex;align-items:flex-start;gap:14px;padding:16px 16px 12px}
+.sc-prob-ring{flex-shrink:0;width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Cormorant Garamond',serif;font-size:1.1rem;font-weight:700;position:relative}
+.sc-prob-ring.high{background:var(--gold-dim);color:var(--gold);border:2px solid rgba(201,168,76,0.4)}
+.sc-prob-ring.med{background:var(--sapphire-dim);color:var(--sapphire);border:2px solid rgba(78,146,236,0.3)}
+.sc-prob-ring.low{background:var(--raised);color:var(--text-3);border:2px solid var(--rim)}
+.sc-meta{flex:1}
+.sc-event{font-size:0.9rem;font-weight:600;color:var(--text);margin-bottom:4px;line-height:1.3}
+.sc-source{font-family:'JetBrains Mono',monospace;font-size:0.6rem;color:var(--text-3);margin-bottom:8px}
+.sc-tags{display:flex;gap:6px;flex-wrap:wrap}
+.sc-tag{font-family:'JetBrains Mono',monospace;font-size:0.58rem;padding:2px 8px;border-radius:3px;letter-spacing:0.06em}
+.tag-regime{background:var(--amber-dim);color:var(--amber)}
+.tag-dist{background:var(--gold-dim);color:var(--gold)}
+.tag-tx{background:var(--sapphire-dim);color:var(--sapphire)}
+.tag-action{background:var(--emerald-dim);color:var(--emerald)}
+.tag-queued{background:rgba(255,255,255,0.04);color:var(--text-3)}
+.sc-body{padding:0 16px 14px}
+.sc-narrative{font-size:0.84rem;color:var(--text);line-height:1.7;margin-bottom:12px}
+.sc-instruments{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px;margin-bottom:12px}
+.sc-instr{background:var(--card);border:1px solid var(--rim);border-radius:6px;padding:8px 10px}
+.si-ticker{font-family:'JetBrains Mono',monospace;font-size:0.78rem;font-weight:500;margin-bottom:2px}
+.si-dir-up{color:var(--emerald)}
+.si-dir-down{color:var(--coral)}
+.si-dir-watch{color:var(--amber)}
+.si-name{font-size:0.7rem;color:var(--text-2);margin-bottom:4px}
+.si-why{font-size:0.68rem;color:var(--text-3);line-height:1.5}
+.sc-cascade{background:var(--card);border-radius:6px;padding:12px;margin-bottom:10px}
+.cascade-title{font-family:'JetBrains Mono',monospace;font-size:0.58rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--gold);margin-bottom:8px}
+.cascade-chain{display:flex;flex-direction:column;gap:6px}
+.cc-step{display:flex;gap:8px;font-size:0.78rem;color:var(--text-2);line-height:1.5}
+.cc-d{font-family:'JetBrains Mono',monospace;font-size:0.6rem;color:var(--text-4);flex-shrink:0;padding-top:2px;min-width:20px}
+.cc-d.edge{color:var(--gold)}
+.cc-text{flex:1}
+.sc-footer{display:flex;align-items:center;gap:8px;padding:10px 16px;border-top:1px solid var(--rim);background:var(--card)}
+.sc-confidence{font-family:'JetBrains Mono',monospace;font-size:0.6rem;color:var(--text-3)}
+.sc-trade-btn{margin-left:auto;background:var(--gold);color:var(--void);border:none;border-radius:4px;padding:5px 14px;font-family:'JetBrains Mono',monospace;font-size:0.6rem;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;font-weight:500;transition:all 0.2s}
+.sc-trade-btn:hover{background:var(--gold-l)}
+.sc-queued-label{margin-left:auto;font-family:'JetBrains Mono',monospace;font-size:0.6rem;color:var(--text-4);font-style:italic}
+
+/* ── PORTFOLIO TABLE ── */
+.portfolio-wrap{background:var(--raised);border:1px solid var(--rim);border-radius:12px;overflow:hidden}
+.ptable{width:100%;border-collapse:collapse}
+.ptable th{font-family:'JetBrains Mono',monospace;font-size:0.58rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-3);padding:10px 14px;text-align:left;border-bottom:1px solid var(--rim);background:var(--card)}
+.ptable td{padding:12px 14px;border-bottom:1px solid var(--rim);font-size:0.82rem;color:var(--text)}
+.ptable tr:last-child td{border-bottom:none}
+.ptable tr:hover td{background:rgba(255,255,255,0.02)}
+.pt-ticker{font-family:'JetBrains Mono',monospace;font-size:0.8rem;font-weight:500;color:var(--gold)}
+.pt-pnl-pos{color:var(--emerald);font-family:'JetBrains Mono',monospace;font-size:0.78rem}
+.pt-pnl-neg{color:var(--coral);font-family:'JetBrains Mono',monospace;font-size:0.78rem}
+.pt-days{font-family:'JetBrains Mono',monospace;font-size:0.7rem;color:var(--text-3)}
+.pt-reason{font-size:0.72rem;color:var(--text-3);max-width:220px;line-height:1.4}
+.pt-exit-btn{background:transparent;border:1px solid var(--coral);color:var(--coral);border-radius:4px;padding:3px 10px;font-family:'JetBrains Mono',monospace;font-size:0.58rem;cursor:pointer;transition:all 0.2s}
+.pt-exit-btn:hover{background:var(--coral-dim)}
+.empty-state{text-align:center;padding:48px 24px;font-family:'JetBrains Mono',monospace;font-size:0.72rem;color:var(--text-4)}
+
+/* ── TRADE HISTORY ── */
+.history-wrap{background:var(--raised);border:1px solid var(--rim);border-radius:12px;overflow:hidden;margin-top:20px}
+
+/* ── BENCHMARK CHART ── */
+.benchmark-wrap{background:var(--raised);border:1px solid var(--rim);border-radius:12px;padding:20px}
+.chart-area{position:relative;height:200px;margin-top:16px}
+canvas{width:100%!important}
+.chart-legend{display:flex;gap:20px;margin-top:12px}
+.cl-item{display:flex;align-items:center;gap:6px;font-family:'JetBrains Mono',monospace;font-size:0.62rem;color:var(--text-3)}
+.cl-dot{width:10px;height:3px;border-radius:2px}
+
+/* ── CALIBRATION ── */
+.calib-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+.calib-item{background:var(--raised);border:1px solid var(--rim);border-radius:10px;padding:16px;text-align:center}
+.calib-num{font-family:'Cormorant Garamond',serif;font-size:2rem;font-weight:700;line-height:1;margin-bottom:4px}
+.calib-label{font-family:'JetBrains Mono',monospace;font-size:0.58rem;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-3)}
+.calls-list{display:flex;flex-direction:column;gap:8px}
+.call-item{display:flex;align-items:center;gap:12px;padding:10px 14px;background:var(--card);border-radius:6px;font-size:0.8rem}
+.call-result-win{width:20px;height:20px;border-radius:50%;background:var(--emerald-dim);border:1px solid var(--emerald);display:flex;align-items:center;justify-content:center;font-size:0.65rem;color:var(--emerald);flex-shrink:0}
+.call-result-loss{width:20px;height:20px;border-radius:50%;background:var(--coral-dim);border:1px solid var(--coral);display:flex;align-items:center;justify-content:center;font-size:0.65rem;color:var(--coral);flex-shrink:0}
+.call-result-pending{width:20px;height:20px;border-radius:50%;background:var(--amber-dim);border:1px solid var(--amber);display:flex;align-items:center;justify-content:center;font-size:0.65rem;color:var(--amber);flex-shrink:0}
+.call-event{flex:1;color:var(--text-2)}
+.call-prob{font-family:'JetBrains Mono',monospace;font-size:0.7rem;color:var(--text-3)}
+.call-ticker{font-family:'JetBrains Mono',monospace;font-size:0.7rem;color:var(--gold)}
+
+/* ── TABS CONTENT ── */
+.tab-content{display:none}
+.tab-content.active{display:block}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:24px;right:24px;background:var(--raised);border:1px solid var(--rim2);border-radius:8px;padding:12px 20px;font-family:'JetBrains Mono',monospace;font-size:0.72rem;color:var(--text);z-index:1000;transform:translateY(80px);opacity:0;transition:all 0.3s;max-width:360px}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.success{border-left:3px solid var(--emerald);color:var(--emerald)}
+.toast.error{border-left:3px solid var(--coral);color:var(--coral)}
+.toast.info{border-left:3px solid var(--gold);color:var(--gold)}
+
+/* ── MISC ── */
+.mono{font-family:'JetBrains Mono',monospace}
+.text-gold{color:var(--gold)}
+.text-emerald{color:var(--emerald)}
+.text-coral{color:var(--coral)}
+.text-amber{color:var(--amber)}
+.mt-20{margin-top:20px}
+.no-data{font-family:'JetBrains Mono',monospace;font-size:0.7rem;color:var(--text-4);text-align:center;padding:32px;background:var(--raised);border:1px solid var(--rim);border-radius:10px}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.signal-card{animation:fadeUp 0.3s ease both}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="header">
+  <div class="logo">
+    <span class="logo-text">Cerebrate</span>
+    <div class="logo-dot"></div>
+  </div>
+  <div class="header-sep"></div>
+  <span class="header-tag">Live Intelligence Terminal · POC</span>
+  <div class="header-right">
+    <span class="market-time" id="marketTime">--:-- EST</span>
+    <div class="live-badge"><div class="pulse"></div><span id="liveStatus">Ready</span></div>
+  </div>
+</header>
+
+<!-- NAV -->
+<div class="nav-tabs">
+  <button class="nav-tab active" onclick="switchTab('intelligence')">Intelligence Feed</button>
+  <button class="nav-tab" onclick="switchTab('portfolio')">Portfolio</button>
+  <button class="nav-tab" onclick="switchTab('benchmark')">Benchmark</button>
+  <button class="nav-tab" onclick="switchTab('calibration')">Calibration</button>
+  <button class="nav-tab" onclick="switchTab('settings')">Settings</button>
+</div>
+
+<div class="main">
+
+  <!-- ══════════════════════ INTELLIGENCE TAB ══════════════════════ -->
+  <div class="tab-content active" id="tab-intelligence">
+
+    <!-- Run controls -->
+    <div class="run-section">
+      <button class="run-btn" id="runMorningBtn" onclick="runMorningAnalysis()">
+        <span class="run-btn-icon">⚡</span>
+        Run Morning Analysis
+      </button>
+      <button class="monitor-btn" id="runMonitorBtn" onclick="runMonitorAnalysis()">
+        <span>👁</span>
+        Live Monitor (Read-Only)
+      </button>
+      <div class="run-info">
+        Last official run: <strong id="lastRunTime">Never</strong> ·
+        Next portfolio action: <strong>9:30 AM EST</strong>
+      </div>
+    </div>
+
+    <!-- Progress -->
+    <div class="progress-wrap" id="progressWrap">
+      <div class="progress-title">Processing headlines through Cerebrate framework...</div>
+      <div class="progress-bar-outer"><div class="progress-bar-inner" id="progressBar"></div></div>
+      <div class="progress-log" id="progressLog"></div>
+    </div>
+
+    <!-- Portfolio summary bar -->
+    <div class="portfolio-bar">
+      <div class="pbar-item">
+        <div class="pbar-label">Total Capital</div>
+        <div class="pbar-value" id="totalCapital">$100,000</div>
+        <div class="pbar-sub">Virtual portfolio</div>
+      </div>
+      <div class="pbar-item">
+        <div class="pbar-label">Deployed</div>
+        <div class="pbar-value pbar-neutral" id="deployedCapital">$0</div>
+        <div class="pbar-sub" id="deployedPct">0% of capital</div>
+      </div>
+      <div class="pbar-item">
+        <div class="pbar-label">Unrealised P&L</div>
+        <div class="pbar-value" id="unrealisedPnl">$0</div>
+        <div class="pbar-sub" id="unrealisedPct">+0.00%</div>
+      </div>
+      <div class="pbar-item">
+        <div class="pbar-label">Realised P&L</div>
+        <div class="pbar-value" id="realisedPnl">$0</div>
+        <div class="pbar-sub" id="realisedPct">+0.00%</div>
+      </div>
+      <div class="pbar-item">
+        <div class="pbar-label">Active Positions</div>
+        <div class="pbar-value pbar-neutral" id="activePositions">0</div>
+        <div class="pbar-sub">open trades</div>
+      </div>
+      <div class="pbar-item">
+        <div class="pbar-label">Signal Accuracy</div>
+        <div class="pbar-value pbar-neutral" id="signalAccuracy">--</div>
+        <div class="pbar-sub" id="signalAccuracySub">no resolved calls</div>
+      </div>
+    </div>
+
+    <!-- Signals -->
+    <div class="section-head">
+      <div class="section-title" style="display:flex;align-items:center;gap:8px;flex:1">
+        Active Signals
+        <span class="section-count" id="signalCount">0</span>
+      </div>
+    </div>
+
+    <div id="signalsContainer">
+      <div class="no-data">Run morning analysis to generate signals from today's news feed</div>
+    </div>
+
+  </div>
+
+  <!-- ══════════════════════ PORTFOLIO TAB ══════════════════════ -->
+  <div class="tab-content" id="tab-portfolio">
+    <div class="section-head">
+      <div class="section-title" style="flex:1">Open Positions</div>
+    </div>
+    <div class="portfolio-wrap">
+      <table class="ptable">
+        <thead>
+          <tr>
+            <th>Ticker</th>
+            <th>Direction</th>
+            <th>Entry</th>
+            <th>Current</th>
+            <th>Size ($)</th>
+            <th>P&L ($)</th>
+            <th>P&L (%)</th>
+            <th>Day</th>
+            <th>Thesis</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="positionsTable">
+          <tr><td colspan="10" class="empty-state">No open positions. Run morning analysis to generate signals.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="section-head mt-20">
+      <div class="section-title" style="flex:1">Trade History</div>
+    </div>
+    <div class="history-wrap">
+      <table class="ptable">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Ticker</th>
+            <th>Direction</th>
+            <th>Entry</th>
+            <th>Exit</th>
+            <th>Size ($)</th>
+            <th>P&L ($)</th>
+            <th>P&L (%)</th>
+            <th>Outcome</th>
+            <th>Reason</th>
+          </tr>
+        </thead>
+        <tbody id="historyTable">
+          <tr><td colspan="10" class="empty-state">No completed trades yet.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ══════════════════════ BENCHMARK TAB ══════════════════════ -->
+  <div class="tab-content" id="tab-benchmark">
+    <div class="two-col">
+      <div class="benchmark-wrap">
+        <div style="font-family:'JetBrains Mono',monospace;font-size:0.65rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-3);margin-bottom:4px">Performance vs Benchmark</div>
+        <div style="font-size:0.8rem;color:var(--text-2)">Cerebrate portfolio vs 60% SPY / 40% AGG balanced benchmark</div>
+        <div class="chart-area">
+          <canvas id="perfChart"></canvas>
+        </div>
+        <div class="chart-legend">
+          <div class="cl-item"><div class="cl-dot" style="background:var(--gold)"></div>Cerebrate</div>
+          <div class="cl-item"><div class="cl-dot" style="background:var(--sapphire)"></div>60/40 Benchmark</div>
+        </div>
+      </div>
+      <div>
+        <div class="calib-grid" style="grid-template-columns:1fr 1fr;margin-bottom:0">
+          <div class="calib-item">
+            <div class="calib-num text-gold" id="bm-cerebrate-ret">+0.00%</div>
+            <div class="calib-label">Cerebrate Return</div>
+          </div>
+          <div class="calib-item">
+            <div class="calib-num text-sapphire" id="bm-bench-ret" style="color:var(--sapphire)">+0.00%</div>
+            <div class="calib-label">Benchmark Return</div>
+          </div>
+          <div class="calib-item">
+            <div class="calib-num" id="bm-alpha">+0.00%</div>
+            <div class="calib-label">Alpha Generated</div>
+          </div>
+          <div class="calib-item">
+            <div class="calib-num text-amber" id="bm-days">0</div>
+            <div class="calib-label">Days Running</div>
+          </div>
+        </div>
+        <div style="background:var(--raised);border:1px solid var(--rim);border-radius:10px;padding:16px;margin-top:12px">
+          <div style="font-family:'JetBrains Mono',monospace;font-size:0.6rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--text-3);margin-bottom:10px">Benchmark composition</div>
+          <div style="font-size:0.82rem;color:var(--text-2);line-height:1.8">
+            <div style="display:flex;justify-content:space-between"><span>SPY (S&P 500 ETF)</span><span class="mono text-gold">60%</span></div>
+            <div style="display:flex;justify-content:space-between"><span>AGG (US Bond ETF)</span><span class="mono text-gold">40%</span></div>
+            <div style="margin-top:8px;font-size:0.72rem;color:var(--text-3)">Standard balanced portfolio baseline. Both start at $100,000 virtual capital on day one.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════ CALIBRATION TAB ══════════════════════ -->
+  <div class="tab-content" id="tab-calibration">
+    <div class="calib-grid">
+      <div class="calib-item">
+        <div class="calib-num text-gold" id="cal-brier">--</div>
+        <div class="calib-label">Brier Score</div>
+      </div>
+      <div class="calib-item">
+        <div class="calib-num text-emerald" id="cal-accuracy">--%</div>
+        <div class="calib-label">Directional Accuracy</div>
+      </div>
+      <div class="calib-item">
+        <div class="calib-num text-amber" id="cal-total">0</div>
+        <div class="calib-label">Total Calls</div>
+      </div>
+      <div class="calib-item">
+        <div class="calib-num" id="cal-resolved" style="color:var(--sapphire)">0</div>
+        <div class="calib-label">Resolved</div>
+      </div>
+    </div>
+
+    <div class="section-head">
+      <div class="section-title" style="flex:1">All Prediction Calls</div>
+    </div>
+    <div class="calls-list" id="callsList">
+      <div class="no-data">No prediction calls yet. Run morning analysis to generate signals.</div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════ SETTINGS TAB ══════════════════════ -->
+  <div class="tab-content" id="tab-settings">
+    <div class="config-panel">
+      <div class="config-title">API Configuration</div>
+      <div class="config-grid">
+        <div class="config-field">
+          <label>NewsAPI Key</label>
+          <input type="password" id="newsApiKey" placeholder="Your NewsAPI key">
+        </div>
+        <div class="config-field">
+          <label>Anthropic API Proxy URL</label>
+          <input type="text" id="proxyUrl" placeholder="https://your-worker.workers.dev">
+        </div>
+      </div>
+      <button class="config-save" onclick="saveConfig()">Save Configuration</button>
+      <div class="config-status" id="configStatus"></div>
+    </div>
+
+    <div class="config-panel" style="margin-top:16px">
+      <div class="config-title">Simulation Parameters</div>
+      <div class="config-grid">
+        <div class="config-field">
+          <label>Starting Capital ($)</label>
+          <input type="number" id="startingCapital" value="100000">
+        </div>
+        <div class="config-field">
+          <label>Signal Threshold (%)</label>
+          <input type="number" id="signalThreshold" value="65" min="50" max="95">
+        </div>
+        <div class="config-field">
+          <label>Max Position Size (% of portfolio)</label>
+          <input type="number" id="maxPosition" value="15" min="5" max="25">
+        </div>
+        <div class="config-field">
+          <label>Hard Close After (days)</label>
+          <input type="number" id="holdDays" value="5" min="1" max="14">
+        </div>
+        <div class="config-field">
+          <label>Exit Signal if Prob Drops Below (%)</label>
+          <input type="number" id="exitThreshold" value="50" min="30" max="65">
+        </div>
+        <div class="config-field">
+          <label>Max Cash Deployed (%)</label>
+          <input type="number" id="maxDeployed" value="60" min="20" max="90">
+        </div>
+      </div>
+      <button class="config-save" onclick="saveSimParams()">Save Parameters</button>
+    </div>
+
+    <div class="config-panel" style="margin-top:16px">
+      <div class="config-title">Danger Zone</div>
+      <button onclick="resetPortfolio()" style="background:var(--coral);color:white;border:none;border-radius:6px;padding:8px 20px;font-family:'JetBrains Mono',monospace;font-size:0.65rem;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer;margin-right:12px">Reset Portfolio</button>
+      <button onclick="clearAllData()" style="background:transparent;color:var(--coral);border:1px solid var(--coral);border-radius:6px;padding:8px 20px;font-family:'JetBrains Mono',monospace;font-size:0.65rem;letter-spacing:0.08em;text-transform:uppercase;cursor:pointer">Clear All Data</button>
+      <div style="font-size:0.75rem;color:var(--text-3);margin-top:10px">Reset portfolio returns capital to $100,000 and closes all positions. Clear all data wipes everything including history.</div>
+    </div>
+  </div>
+
+</div><!-- end main -->
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// CEREBRATE LIVE INTELLIGENCE TERMINAL
+// ═══════════════════════════════════════════════════════════════
+
+// ── STATE ──
+let STATE = {
+  config: {
+    newsApiKey: '',
+    proxyUrl: '',
+    startingCapital: 100000,
+    signalThreshold: 65,
+    maxPosition: 15,
+    holdDays: 5,
+    exitThreshold: 50,
+    maxDeployed: 60
+  },
+  portfolio: {
+    cash: 100000,
+    positions: [],
+    history: [],
+    startDate: null,
+    dailyValues: []
+  },
+  signals: [],
+  calls: [],
+  lastRun: null,
+  isOfficialRun: false
+};
+
+// ── KEYWORD FILTER ──
+const GEO_KEYWORDS = [
+  'war','military','sanction','oil','energy','fed','inflation','recession','gdp',
+  'trade','tariff','central bank','interest rate','opec','iran','russia','china',
+  'ukraine','middle east','nato','missile','nuclear','attack','strike','crisis',
+  'supply chain','gas','brent','crude','wti','treasury','yield','dollar','yen',
+  'euro','currency','election','coup','protest','geopolit','conflict','troops',
+  'semiconductor','chip','export','import','embargo','alliance','summit','g7','g20',
+  'imf','world bank','unemployment','jobs','cpi','pce','earnings','revenue',
+  'bankruptcy','default','debt ceiling','federal reserve','powell','powell',
+  'stocks','market','nasdaq','s&p','dow','correction','rally','selloff',
+  'venezuela','saudi','israel','taiwan','north korea','pakistan','india'
+];
+
+function isRelevant(headline) {
+  const lower = headline.toLowerCase();
+  return GEO_KEYWORDS.some(kw => lower.includes(kw));
+}
+
+// ── LOAD / SAVE STATE ──
+function loadState() {
+  try {
+    const saved = localStorage.getItem('cerebrate_state');
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      STATE = { ...STATE, ...parsed };
+    }
+  } catch(e) {}
+  applyConfigToUI();
+  updateAllUI();
+}
+
+function saveState() {
+  try {
+    localStorage.setItem('cerebrate_state', JSON.stringify(STATE));
+  } catch(e) {}
+}
+
+function applyConfigToUI() {
+  document.getElementById('newsApiKey').value = STATE.config.newsApiKey || '';
+  document.getElementById('proxyUrl').value = STATE.config.proxyUrl || '';
+  document.getElementById('startingCapital').value = STATE.config.startingCapital;
+  document.getElementById('signalThreshold').value = STATE.config.signalThreshold;
+  document.getElementById('maxPosition').value = STATE.config.maxPosition;
+  document.getElementById('holdDays').value = STATE.config.holdDays;
+  document.getElementById('exitThreshold').value = STATE.config.exitThreshold;
+  document.getElementById('maxDeployed').value = STATE.config.maxDeployed;
+}
+
+// ── CONFIG ──
+function saveConfig() {
+  STATE.config.newsApiKey = document.getElementById('newsApiKey').value.trim();
+  STATE.config.proxyUrl = document.getElementById('proxyUrl').value.trim();
+  saveState();
+  document.getElementById('configStatus').textContent = '✓ Configuration saved';
+  setTimeout(() => document.getElementById('configStatus').textContent = '', 3000);
+  showToast('Configuration saved', 'success');
+}
+
+function saveSimParams() {
+  STATE.config.startingCapital = parseFloat(document.getElementById('startingCapital').value);
+  STATE.config.signalThreshold = parseFloat(document.getElementById('signalThreshold').value);
+  STATE.config.maxPosition = parseFloat(document.getElementById('maxPosition').value);
+  STATE.config.holdDays = parseInt(document.getElementById('holdDays').value);
+  STATE.config.exitThreshold = parseFloat(document.getElementById('exitThreshold').value);
+  STATE.config.maxDeployed = parseFloat(document.getElementById('maxDeployed').value);
+  saveState();
+  showToast('Parameters saved', 'success');
+}
+
+// ── TIME ──
+function updateClock() {
+  const now = new Date();
+  const est = new Date(now.toLocaleString('en-US', { timeZone: 'America/New_York' }));
+  const h = est.getHours().toString().padStart(2,'0');
+  const m = est.getMinutes().toString().padStart(2,'0');
+  const s = est.getSeconds().toString().padStart(2,'0');
+  document.getElementById('marketTime').textContent = `${h}:${m}:${s} EST`;
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// ── FETCH NEWS ──
+async function fetchHeadlines() {
+  const key = STATE.config.newsApiKey;
+  if (!key) throw new Error('NewsAPI key not configured. Go to Settings.');
+
+  const url = `https://newsapi.org/v2/top-headlines?language=en&pageSize=40&apiKey=${key}&category=business`;
+  const url2 = `https://newsapi.org/v2/everything?language=en&pageSize=40&sortBy=publishedAt&q=geopolitics+OR+war+OR+sanctions+OR+oil+OR+federal+reserve+OR+inflation+OR+trade+war&apiKey=${key}`;
+
+  const [r1, r2] = await Promise.all([
+    fetch(url).then(r => r.json()),
+    fetch(url2).then(r => r.json())
+  ]);
+
+  const all = [
+    ...(r1.articles || []),
+    ...(r2.articles || [])
+  ];
+
+  // Deduplicate and filter
+  const seen = new Set();
+  const filtered = [];
+  for (const a of all) {
+    const title = a.title || '';
+    if (!title || title === '[Removed]') continue;
+    if (seen.has(title)) continue;
+    seen.add(title);
+    if (isRelevant(title)) {
+      filtered.push({
+        title: title,
+        description: a.description || '',
+        source: a.source?.name || 'Unknown',
+        publishedAt: a.publishedAt,
+        url: a.url
+      });
+    }
+  }
+  return filtered.slice(0, 25);
+}
+
+// ── CALL CLAUDE API ──
+async function analyzeHeadline(headline, isOfficial) {
+  const proxyUrl = STATE.config.proxyUrl;
+  if (!proxyUrl) throw new Error('Proxy URL not configured. Go to Settings.');
+
+  const prompt = `You are the Cerebrate market intelligence framework. Analyze this news headline and return ONLY valid JSON (no markdown, no explanation, just the JSON object).
+
+HEADLINE: "${headline.title}"
+SOURCE: "${headline.source}"
+DESCRIPTION: "${headline.description}"
+
+Return this exact JSON structure:
+{
+  "relevant": true/false,
+  "eventTitle": "short clear event title",
+  "regime": "Risk-Off|Risk-On|Stagflationary|Inflationary|Neutral",
+  "probability": 0-100,
+  "confidence": "HIGH|MEDIUM|LOW",
+  "direction": "long|short|neutral",
+  "narrative": "2-3 sentences plain English explaining what happened and why it matters for investors",
+  "portfolioImpact": "1-2 sentences on what this means for a standard index fund holder",
+  "instruments": [
+    {"ticker": "XYZ", "name": "Full name", "direction": "up|down|watch", "reason": "one line why", "probability": 0-100}
+  ],
+  "cascade": [
+    {"distance": 1, "description": "immediate effect", "edge": false},
+    {"distance": 2, "description": "second order effect", "edge": false},
+    {"distance": 3, "description": "non-obvious institutional insight", "edge": true}
+  ],
+  "transmissionMechanisms": ["Energy", "Rates", "FX", "SupplyChain", "ConsumerConfidence"],
+  "kellySize": 0-20,
+  "sourceQuality": "TIER1|TIER2|TIER3",
+  "cascadeDistance": 1-5
+}
+
+Rules:
+- Only set relevant:true if this is genuinely market-moving (geopolitical, macro, central bank, major corporate, commodity)
+- probability is your assessed probability the directional call resolves correctly within 5 trading days
+- instruments: 3-5 specific ETFs or major stocks that are directly affected. Use real tickers only (XLE, GLD, QQQ, SPY, XOM, LMT etc)
+- cascade: always include 3 steps minimum, distance 3+ should be the non-obvious institutional insight
+- kellySize: suggested Half-Kelly position size as % of portfolio given the probability
+- Keep narrative in plain English, no jargon`;
+
+  const response = await fetch(proxyUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-20250514',
+      max_tokens: 1000,
+      messages: [{ role: 'user', content: prompt }]
+    })
+  });
+
+  if (!response.ok) {
+    const err = await response.text();
+    throw new Error(`API error: ${err}`);
+  }
+
+  const data = await response.json();
+  const text = data.content?.[0]?.text || '';
+
+  // Clean and parse JSON
+  const clean = text.replace(/```json|```/g, '').trim();
+  const parsed = JSON.parse(clean);
+  parsed.headline = headline;
+  parsed.timestamp = new Date().toISOString();
+  parsed.isOfficial = isOfficial;
+  return parsed;
+}
+
+// ── FETCH PRICE (Yahoo Finance via proxy) ──
+async function fetchPrice(ticker) {
+  try {
+    const proxyUrl = STATE.config.proxyUrl;
+    const response = await fetch(`${proxyUrl}/price/${ticker}`);
+    if (!response.ok) return null;
+    const data = await response.json();
+    return data.price || null;
+  } catch(e) {
+    // Return a simulated price for POC if price fetch fails
+    return null;
+  }
+}
+
+// ── KELLY CALCULATION ──
+function halfKelly(probability, winLossRatio = 2) {
+  const p = probability / 100;
+  const q = 1 - p;
+  const kelly = (p * winLossRatio - q) / winLossRatio;
+  return Math.max(0, (kelly / 2) * 100); // Half-Kelly as percentage
+}
+
+// ── EXECUTE TRADE ──
+function executeTrade(signal, instrument) {
+  const portfolio = STATE.portfolio;
+  const config = STATE.config;
+
+  // Check if already holding this ticker
+  if (portfolio.positions.find(p => p.ticker === instrument.ticker && p.status === 'open')) {
+    return false;
+  }
+
+  // Calculate position size
+  const kellyPct = Math.min(halfKelly(signal.probability), config.maxPosition) / 100;
+  const totalValue = getPortfolioValue();
+  const deployedPct = getDeployedPct();
+
+  if (deployedPct >= config.maxDeployed) return false;
+
+  const positionSize = Math.min(
+    totalValue * kellyPct,
+    totalValue * (config.maxDeployed / 100) - getDeployedAmount()
+  );
+
+  if (positionSize < 500) return false; // Minimum position
+
+  // Use simulated entry price (100 as base, will update with real prices)
+  const entryPrice = 100;
+
+  const position = {
+    id: Date.now(),
+    ticker: instrument.ticker,
+    name: instrument.name,
+    direction: instrument.direction === 'up' ? 'long' : 'short',
+    entryPrice: entryPrice,
+    currentPrice: entryPrice,
+    size: positionSize,
+    shares: positionSize / entryPrice,
+    entryDate: new Date().toISOString(),
+    dayCount: 0,
+    status: 'open',
+    thesis: signal.eventTitle,
+    probability: signal.probability,
+    signalId: signal.timestamp,
+    reason: instrument.reason
+  };
+
+  portfolio.positions.push(position);
+  portfolio.cash -= positionSize;
+
+  if (!portfolio.startDate) portfolio.startDate = new Date().toISOString();
+
+  return true;
+}
+
+// ── PORTFOLIO METRICS ──
+function getPortfolioValue() {
+  const positions = STATE.portfolio.positions.filter(p => p.status === 'open');
+  const invested = positions.reduce((sum, p) => sum + p.size, 0);
+  const unrealised = positions.reduce((sum, p) => {
+    const pnl = p.direction === 'long'
+      ? (p.currentPrice - p.entryPrice) / p.entryPrice * p.size
+      : (p.entryPrice - p.currentPrice) / p.entryPrice * p.size;
+    return sum + pnl;
+  }, 0);
+  return STATE.portfolio.cash + invested + unrealised;
+}
+
+function getDeployedAmount() {
+  return STATE.portfolio.positions
+    .filter(p => p.status === 'open')
+    .reduce((sum, p) => sum + p.size, 0);
+}
+
+function getDeployedPct() {
+  return (getDeployedAmount() / getPortfolioValue()) * 100;
+}
+
+function getUnrealisedPnl() {
+  return STATE.portfolio.positions
+    .filter(p => p.status === 'open')
+    .reduce((sum, p) => {
+      return sum + (p.direction === 'long'
+        ? (p.currentPrice - p.entryPrice) / p.entryPrice * p.size
+        : (p.entryPrice - p.currentPrice) / p.entryPrice * p.size);
+    }, 0);
+}
+
+function getRealisedPnl() {
+  return STATE.portfolio.history.reduce((sum, t) => sum + (t.pnl || 0), 0);
+}
+
+// ── EXIT POSITION ──
+function exitPosition(positionId, reason = 'Manual') {
+  const pos = STATE.portfolio.positions.find(p => p.id === positionId);
+  if (!pos || pos.status !== 'open') return;
+
+  const pnl = pos.direction === 'long'
+    ? (pos.currentPrice - pos.entryPrice) / pos.entryPrice * pos.size
+    : (pos.entryPrice - pos.currentPrice) / pos.entryPrice * pos.size;
+
+  STATE.portfolio.cash += pos.size + pnl;
+  pos.status = 'closed';
+
+  STATE.portfolio.history.push({
+    ...pos,
+    exitPrice: pos.currentPrice,
+    exitDate: new Date().toISOString(),
+    pnl: pnl,
+    pnlPct: pnl / pos.size * 100,
+    exitReason: reason
+  });
+
+  // Update calibration call
+  const call = STATE.calls.find(c => c.signalId === pos.signalId && c.ticker === pos.ticker);
+  if (call) {
+    call.resolved = true;
+    call.outcome = pnl > 0 ? 'win' : 'loss';
+    call.actualPnl = pnl;
+  }
+
+  updateAllUI();
+  saveState();
+}
+
+// ── MANAGE EXISTING POSITIONS ──
+function managePositions(newSignals) {
+  const config = STATE.config;
+  const positions = STATE.portfolio.positions.filter(p => p.status === 'open');
+
+  for (const pos of positions) {
+    pos.dayCount = (pos.dayCount || 0) + 1;
+
+    // Hard close after holdDays
+    if (pos.dayCount >= config.holdDays) {
+      exitPosition(pos.id, `Hard close — ${config.holdDays} day limit`);
+      continue;
+    }
+
+    // Check if any new signal contradicts this position
+    for (const sig of newSignals) {
+      for (const instr of (sig.instruments || [])) {
+        if (instr.ticker === pos.ticker) {
+          const newProb = sig.probability;
+          if (newProb < config.exitThreshold) {
+            exitPosition(pos.id, `Signal degraded — prob dropped to ${newProb}%`);
+          }
+        }
+      }
+    }
+  }
+}
+
+// ── MAIN ANALYSIS RUNNER ──
+async function runAnalysis(isOfficial) {
+  const config = STATE.config;
+
+  if (!config.newsApiKey) {
+    showToast('NewsAPI key not configured. Go to Settings.', 'error');
+    switchTab('settings');
+    return;
+  }
+  if (!config.proxyUrl) {
+    showToast('Proxy URL not configured. Go to Settings.', 'error');
+    switchTab('settings');
+    return;
+  }
+
+  // Disable buttons
+  document.getElementById('runMorningBtn').disabled = true;
+  document.getElementById('runMonitorBtn').disabled = true;
+  document.getElementById('liveStatus').textContent = 'Running...';
+
+  // Show progress
+  const progressWrap = document.getElementById('progressWrap');
+  const progressBar = document.getElementById('progressBar');
+  const progressLog = document.getElementById('progressLog');
+  progressWrap.classList.add('show');
+  progressLog.innerHTML = '';
+
+  function addLog(msg, type = 'active') {
+    const now = new Date().toLocaleTimeString('en-US', { timeZone: 'America/New_York', hour12: false });
+    const div = document.createElement('div');
+    div.className = 'log-item';
+    div.innerHTML = `<span class="log-time">${now}</span><span class="log-${type}">${msg}</span>`;
+    progressLog.appendChild(div);
+    progressLog.scrollTop = progressLog.scrollHeight;
+  }
+
+  try {
+    addLog('Fetching headlines from NewsAPI...', 'active');
+    progressBar.style.width = '10%';
+
+    const headlines = await fetchHeadlines();
+    addLog(`Fetched ${headlines.length} relevant headlines after filtering`, 'ok');
+    progressBar.style.width = '20%';
+
+    const results = [];
+    const step = 70 / Math.max(headlines.length, 1);
+
+    for (let i = 0; i < headlines.length; i++) {
+      const h = headlines[i];
+      addLog(`Analysing: ${h.title.substring(0, 60)}...`, 'active');
+
+      try {
+        const result = await analyzeHeadline(h, isOfficial);
+        if (result.relevant) {
+          results.push(result);
+          addLog(`✓ ${result.eventTitle} — ${result.probability}% confidence`, 'ok');
+        } else {
+          addLog(`↷ Skipped (not market-moving)`, 'skip');
+        }
+      } catch(e) {
+        addLog(`✗ Error: ${e.message}`, 'skip');
+      }
+
+      progressBar.style.width = `${20 + (i + 1) * step}%`;
+    }
+
+    progressBar.style.width = '90%';
+    addLog(`Processing complete — ${results.length} signals generated`, 'ok');
+
+    // Sort by probability
+    results.sort((a, b) => b.probability - a.probability);
+    STATE.signals = results;
+
+    // If official run: manage positions and execute new trades
+    if (isOfficial) {
+      addLog('Managing existing positions...', 'active');
+      managePositions(results);
+
+      let newTrades = 0;
+      for (const signal of results) {
+        if (signal.probability >= config.signalThreshold) {
+          for (const instr of (signal.instruments || []).slice(0, 2)) {
+            if (instr.direction !== 'watch' && instr.probability >= config.signalThreshold) {
+              const traded = executeTrade(signal, instr);
+              if (traded) {
+                newTrades++;
+                // Add to calibration calls
+                STATE.calls.push({
+                  id: Date.now() + Math.random(),
+                  signalId: signal.timestamp,
+                  ticker: instr.ticker,
+                  eventTitle: signal.eventTitle,
+                  probability: signal.probability,
+                  direction: instr.direction,
+                  date: new Date().toISOString(),
+                  resolved: false,
+                  outcome: 'pending'
+                });
+              }
+            }
+          }
+        }
+      }
+
+      addLog(`Executed ${newTrades} new trades`, 'ok');
+      STATE.lastRun = new Date().toISOString();
+      document.getElementById('lastRunTime').textContent =
+        new Date().toLocaleTimeString('en-US', { timeZone: 'America/New_York', hour12: false });
+
+      // Record daily portfolio value for benchmark chart
+      STATE.portfolio.dailyValues.push({
+        date: new Date().toISOString(),
+        value: getPortfolioValue()
+      });
+    } else {
+      addLog('Monitor mode — signals queued for next official run', 'active');
+    }
+
+    progressBar.style.width = '100%';
+    addLog(`Done. ${isOfficial ? 'Trades executed.' : 'Read-only — no trades taken.'}`, 'ok');
+
+    saveState();
+    updateAllUI();
+    switchTab('intelligence');
+
+    showToast(
+      isOfficial
+        ? `Morning analysis complete — ${results.length} signals, ${STATE.portfolio.positions.filter(p=>p.status==='open').length} positions`
+        : `Monitor run complete — ${results.length} signals queued`,
+      'success'
+    );
+
+  } catch(e) {
+    addLog(`Fatal error: ${e.message}`, 'skip');
+    showToast(`Error: ${e.message}`, 'error');
+  } finally {
+    document.getElementById('runMorningBtn').disabled = false;
+    document.getElementById('runMonitorBtn').disabled = false;
+    document.getElementById('liveStatus').textContent = 'Ready';
+    setTimeout(() => { progressWrap.classList.remove('show'); }, 5000);
+  }
+}
+
+function runMorningAnalysis() { runAnalysis(true); }
+function runMonitorAnalysis() { runAnalysis(false); }
+
+// ── RENDER SIGNALS ──
+function renderSignals() {
+  const container = document.getElementById('signalsContainer');
+  const signals = STATE.signals;
+
+  document.getElementById('signalCount').textContent = signals.length;
+
+  if (signals.length === 0) {
+    container.innerHTML = '<div class="no-data">Run morning analysis to generate signals from today\'s news feed</div>';
+    return;
+  }
+
+  container.innerHTML = '';
+  const threshold = STATE.config.signalThreshold;
+
+  for (const sig of signals) {
+    const isHigh = sig.probability >= threshold;
+    const confClass = sig.probability >= 75 ? 'high' : sig.probability >= 60 ? 'med' : 'low';
+
+    const instrHtml = (sig.instruments || []).map(i => `
+      <div class="sc-instr">
+        <div class="si-ticker si-dir-${i.direction === 'up' ? 'up' : i.direction === 'down' ? 'down' : 'watch'}">${i.ticker}</div>
+        <div class="si-name">${i.name || ''}</div>
+        <div class="si-why">${i.reason || ''}</div>
+      </div>
+    `).join('');
+
+    const cascadeHtml = (sig.cascade || []).map(c => `
+      <div class="cc-step">
+        <span class="cc-d ${c.edge ? 'edge' : ''}">D${c.distance}</span>
+        <span class="cc-text">${c.description}</span>
+      </div>
+    `).join('');
+
+    const txHtml = (sig.transmissionMechanisms || []).map(t =>
+      `<span class="sc-tag tag-tx">${t}</span>`
+    ).join('');
+
+    const card = document.createElement('div');
+    card.className = `signal-card ${isHigh ? 'high-conf' : 'med-conf'}`;
+    card.innerHTML = `
+      <div class="sc-header">
+        <div class="sc-prob-ring ${confClass}">${sig.probability}%</div>
+        <div class="sc-meta">
+          <div class="sc-event">${sig.eventTitle || sig.headline?.title || 'Event'}</div>
+          <div class="sc-source">${sig.headline?.source || ''} · ${new Date(sig.timestamp).toLocaleTimeString()}</div>
+          <div class="sc-tags">
+            <span class="sc-tag tag-regime">${sig.regime || 'Neutral'}</span>
+            <span class="sc-tag tag-dist">Chain D${sig.cascadeDistance || 1}</span>
+            ${txHtml}
+            ${isHigh && sig.isOfficial ? '<span class="sc-tag tag-action">TRADED</span>' : ''}
+            ${!sig.isOfficial ? '<span class="sc-tag tag-queued">Monitor Only</span>' : ''}
+          </div>
+        </div>
+      </div>
+      <div class="sc-body">
+        <div class="sc-narrative">${sig.narrative || ''}</div>
+        ${sig.portfolioImpact ? `<div style="font-size:0.8rem;color:var(--text-2);background:var(--emerald-dim);border:1px solid rgba(48,201,154,0.15);border-radius:6px;padding:10px 12px;margin-bottom:12px;line-height:1.6">📊 <strong style="color:var(--emerald)">Portfolio impact:</strong> ${sig.portfolioImpact}</div>` : ''}
+        ${instrHtml ? `<div class="sc-instruments">${instrHtml}</div>` : ''}
+        ${cascadeHtml ? `<div class="sc-cascade"><div class="cascade-title">Cascade chain</div><div class="cascade-chain">${cascadeHtml}</div></div>` : ''}
+      </div>
+      <div class="sc-footer">
+        <span class="sc-confidence mono">Confidence: ${sig.confidence || 'MEDIUM'} · Source: ${sig.sourceQuality || 'TIER2'} · Kelly: ${(sig.kellySize || 0).toFixed(1)}%</span>
+        ${isHigh && sig.isOfficial ? '' : isHigh ? '<span class="sc-queued-label">Queued for next official run</span>' : '<span class="sc-queued-label">Below threshold</span>'}
+      </div>
+    `;
+    container.appendChild(card);
+  }
+}
+
+// ── RENDER PORTFOLIO ──
+function renderPortfolio() {
+  const positions = STATE.portfolio.positions.filter(p => p.status === 'open');
+  const tbody = document.getElementById('positionsTable');
+
+  if (positions.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="10" class="empty-state">No open positions. Run morning analysis to generate signals.</td></tr>';
+  } else {
+    tbody.innerHTML = positions.map(p => {
+      const pnl = p.direction === 'long'
+        ? (p.currentPrice - p.entryPrice) / p.entryPrice * p.size
+        : (p.entryPrice - p.currentPrice) / p.entryPrice * p.size;
+      const pnlPct = pnl / p.size * 100;
+      const pnlClass = pnl >= 0 ? 'pt-pnl-pos' : 'pt-pnl-neg';
+      const sign = pnl >= 0 ? '+' : '';
+      return `
+        <tr>
+          <td class="pt-ticker">${p.ticker}</td>
+          <td style="color:${p.direction==='long'?'var(--emerald)':'var(--coral)'}">
+            ${p.direction.toUpperCase()}
+          </td>
+          <td class="mono">$${p.entryPrice.toFixed(2)}</td>
+          <td class="mono">$${p.currentPrice.toFixed(2)}</td>
+          <td class="mono">$${p.size.toLocaleString('en-US',{maximumFractionDigits:0})}</td>
+          <td class="${pnlClass}">${sign}$${Math.abs(pnl).toLocaleString('en-US',{maximumFractionDigits:0})}</td>
+          <td class="${pnlClass}">${sign}${pnlPct.toFixed(2)}%</td>
+          <td class="pt-days">Day ${p.dayCount}/${STATE.config.holdDays}</td>
+          <td class="pt-reason">${p.thesis || ''}</td>
+          <td><button class="pt-exit-btn" onclick="exitPosition(${p.id},'Manual exit')">Exit</button></td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  // History
+  const history = STATE.portfolio.history;
+  const htbody = document.getElementById('historyTable');
+  if (history.length === 0) {
+    htbody.innerHTML = '<tr><td colspan="10" class="empty-state">No completed trades yet.</td></tr>';
+  } else {
+    htbody.innerHTML = [...history].reverse().map(t => {
+      const sign = t.pnl >= 0 ? '+' : '';
+      const pnlClass = t.pnl >= 0 ? 'pt-pnl-pos' : 'pt-pnl-neg';
+      return `
+        <tr>
+          <td class="mono" style="font-size:0.7rem;color:var(--text-3)">${new Date(t.entryDate).toLocaleDateString()}</td>
+          <td class="pt-ticker">${t.ticker}</td>
+          <td style="color:${t.direction==='long'?'var(--emerald)':'var(--coral)'}">${t.direction.toUpperCase()}</td>
+          <td class="mono">$${t.entryPrice.toFixed(2)}</td>
+          <td class="mono">$${(t.exitPrice||t.currentPrice).toFixed(2)}</td>
+          <td class="mono">$${t.size.toLocaleString('en-US',{maximumFractionDigits:0})}</td>
+          <td class="${pnlClass}">${sign}$${Math.abs(t.pnl).toLocaleString('en-US',{maximumFractionDigits:0})}</td>
+          <td class="${pnlClass}">${sign}${(t.pnlPct||0).toFixed(2)}%</td>
+          <td style="color:${t.pnl>=0?'var(--emerald)':'var(--coral)'}">
+            ${t.pnl >= 0 ? '✓ Win' : '✗ Loss'}
+          </td>
+          <td class="pt-reason">${t.exitReason || ''}</td>
+        </tr>
+      `;
+    }).join('');
+  }
+}
+
+// ── RENDER PORTFOLIO BAR ──
+function renderPortfolioBar() {
+  const totalValue = getPortfolioValue();
+  const startingCapital = STATE.config.startingCapital;
+  const deployed = getDeployedAmount();
+  const deployedPct = (deployed / totalValue * 100).toFixed(1);
+  const unrealised = getUnrealisedPnl();
+  const realised = getRealisedPnl();
+  const totalPnl = totalValue - startingCapital;
+  const totalPnlPct = (totalPnl / startingCapital * 100).toFixed(2);
+
+  document.getElementById('totalCapital').textContent = `$${totalValue.toLocaleString('en-US',{maximumFractionDigits:0})}`;
+  document.getElementById('deployedCapital').textContent = `$${deployed.toLocaleString('en-US',{maximumFractionDigits:0})}`;
+  document.getElementById('deployedPct').textContent = `${deployedPct}% of capital`;
+  document.getElementById('activePositions').textContent = STATE.portfolio.positions.filter(p=>p.status==='open').length;
+
+  const upnlEl = document.getElementById('unrealisedPnl');
+  upnlEl.textContent = `${unrealised >= 0 ? '+' : ''}$${Math.abs(unrealised).toLocaleString('en-US',{maximumFractionDigits:0})}`;
+  upnlEl.className = `pbar-value ${unrealised >= 0 ? 'pbar-pos' : 'pbar-neg'}`;
+  document.getElementById('unrealisedPct').textContent = `${unrealised >= 0 ? '+' : ''}${(unrealised / startingCapital * 100).toFixed(2)}%`;
+
+  const rpnlEl = document.getElementById('realisedPnl');
+  rpnlEl.textContent = `${realised >= 0 ? '+' : ''}$${Math.abs(realised).toLocaleString('en-US',{maximumFractionDigits:0})}`;
+  rpnlEl.className = `pbar-value ${realised >= 0 ? 'pbar-pos' : 'pbar-neg'}`;
+  document.getElementById('realisedPct').textContent = `${totalPnl >= 0 ? '+' : ''}${totalPnlPct}% total`;
+
+  // Signal accuracy
+  const resolved = STATE.calls.filter(c => c.resolved);
+  const wins = resolved.filter(c => c.outcome === 'win');
+  if (resolved.length > 0) {
+    const acc = (wins.length / resolved.length * 100).toFixed(0);
+    document.getElementById('signalAccuracy').textContent = `${acc}%`;
+    document.getElementById('signalAccuracy').className = `pbar-value ${acc >= 60 ? 'pbar-pos' : 'pbar-neg'}`;
+    document.getElementById('signalAccuracySub').textContent = `${wins.length}/${resolved.length} calls`;
+  }
+}
+
+// ── RENDER CALIBRATION ──
+function renderCalibration() {
+  const calls = STATE.calls;
+  const resolved = calls.filter(c => c.resolved);
+  const wins = resolved.filter(c => c.outcome === 'win');
+
+  document.getElementById('cal-total').textContent = calls.length;
+  document.getElementById('cal-resolved').textContent = resolved.length;
+
+  if (resolved.length > 0) {
+    const acc = (wins.length / resolved.length * 100).toFixed(0);
+    document.getElementById('cal-accuracy').textContent = `${acc}%`;
+
+    // Simple Brier score
+    const brier = resolved.reduce((sum, c) => {
+      const outcome = c.outcome === 'win' ? 1 : 0;
+      const prob = c.probability / 100;
+      return sum + Math.pow(prob - outcome, 2);
+    }, 0) / resolved.length;
+    document.getElementById('cal-brier').textContent = brier.toFixed(3);
+    document.getElementById('cal-brier').className = `calib-num ${brier < 0.15 ? 'text-gold' : 'text-amber'}`;
+  }
+
+  const list = document.getElementById('callsList');
+  if (calls.length === 0) {
+    list.innerHTML = '<div class="no-data">No prediction calls yet. Run morning analysis to generate signals.</div>';
+    return;
+  }
+
+  list.innerHTML = [...calls].reverse().map(c => `
+    <div class="call-item">
+      <div class="call-result-${c.outcome === 'win' ? 'win' : c.outcome === 'loss' ? 'loss' : 'pending'}">
+        ${c.outcome === 'win' ? '✓' : c.outcome === 'loss' ? '✗' : '⟳'}
+      </div>
+      <div class="call-event">${c.eventTitle || 'Signal'}</div>
+      <div class="call-ticker">${c.ticker}</div>
+      <div class="call-prob">${c.probability}%</div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:0.6rem;color:var(--text-4)">
+        ${new Date(c.date).toLocaleDateString()}
+      </div>
+    </div>
+  `).join('');
+}
+
+// ── RENDER BENCHMARK CHART ──
+function renderBenchmarkChart() {
+  const canvas = document.getElementById('perfChart');
+  const ctx = canvas.getContext('2d');
+  const daily = STATE.portfolio.dailyValues;
+
+  canvas.width = canvas.offsetWidth || 600;
+  canvas.height = 200;
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  if (daily.length < 2) {
+    ctx.fillStyle = 'rgba(201,168,76,0.3)';
+    ctx.font = '12px JetBrains Mono';
+    ctx.textAlign = 'center';
+    ctx.fillText('Chart will populate as daily runs accumulate', canvas.width/2, 100);
+    return;
+  }
+
+  const startVal = STATE.config.startingCapital;
+  const values = daily.map(d => d.value);
+  const minV = Math.min(...values) * 0.99;
+  const maxV = Math.max(...values) * 1.01;
+
+  const w = canvas.width;
+  const h = canvas.height;
+  const pad = { top: 10, right: 20, bottom: 30, left: 60 };
+  const chartW = w - pad.left - pad.right;
+  const chartH = h - pad.top - pad.bottom;
+
+  function xPos(i) { return pad.left + (i / (values.length - 1)) * chartW; }
+  function yPos(v) { return pad.top + (1 - (v - minV) / (maxV - minV)) * chartH; }
+
+  // Grid lines
+  ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+  ctx.lineWidth = 1;
+  for (let i = 0; i <= 4; i++) {
+    const y = pad.top + (i / 4) * chartH;
+    ctx.beginPath(); ctx.moveTo(pad.left, y); ctx.lineTo(pad.left + chartW, y); ctx.stroke();
+  }
+
+  // Baseline
+  const baselineY = yPos(startVal);
+  ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+  ctx.setLineDash([4, 4]);
+  ctx.beginPath(); ctx.moveTo(pad.left, baselineY); ctx.lineTo(pad.left + chartW, baselineY); ctx.stroke();
+  ctx.setLineDash([]);
+
+  // Cerebrate line
+  ctx.strokeStyle = '#C9A84C';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  values.forEach((v, i) => {
+    i === 0 ? ctx.moveTo(xPos(i), yPos(v)) : ctx.lineTo(xPos(i), yPos(v));
+  });
+  ctx.stroke();
+
+  // Cerebrate fill
+  ctx.fillStyle = 'rgba(201,168,76,0.08)';
+  ctx.beginPath();
+  values.forEach((v, i) => {
+    i === 0 ? ctx.moveTo(xPos(i), yPos(v)) : ctx.lineTo(xPos(i), yPos(v));
+  });
+  ctx.lineTo(xPos(values.length - 1), pad.top + chartH);
+  ctx.lineTo(pad.left, pad.top + chartH);
+  ctx.closePath(); ctx.fill();
+
+  // Y axis labels
+  ctx.fillStyle = 'rgba(122,133,160,0.8)';
+  ctx.font = '10px JetBrains Mono';
+  ctx.textAlign = 'right';
+  for (let i = 0; i <= 4; i++) {
+    const v = minV + (maxV - minV) * (1 - i/4);
+    const y = pad.top + (i / 4) * chartH;
+    ctx.fillText(`$${(v/1000).toFixed(0)}k`, pad.left - 5, y + 3);
+  }
+
+  // Update benchmark metrics
+  const lastVal = values[values.length - 1];
+  const ret = ((lastVal - startVal) / startVal * 100).toFixed(2);
+  const sign = ret >= 0 ? '+' : '';
+  document.getElementById('bm-cerebrate-ret').textContent = `${sign}${ret}%`;
+  document.getElementById('bm-cerebrate-ret').className = `calib-num ${ret >= 0 ? 'text-gold' : 'text-coral'}`;
+  document.getElementById('bm-days').textContent = daily.length;
+
+  // Simulated benchmark (0.02% daily drift for 60/40)
+  const benchRet = (daily.length * 0.02).toFixed(2);
+  document.getElementById('bm-bench-ret').textContent = `+${benchRet}%`;
+  const alpha = (parseFloat(ret) - parseFloat(benchRet)).toFixed(2);
+  document.getElementById('bm-alpha').textContent = `${alpha >= 0 ? '+' : ''}${alpha}%`;
+  document.getElementById('bm-alpha').className = `calib-num ${alpha >= 0 ? 'text-emerald' : 'text-coral'}`;
+}
+
+// ── UPDATE ALL UI ──
+function updateAllUI() {
+  renderSignals();
+  renderPortfolio();
+  renderPortfolioBar();
+  renderCalibration();
+  renderBenchmarkChart();
+}
+
+// ── TABS ──
+function switchTab(tab) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById(`tab-${tab}`).classList.add('active');
+  const tabs = ['intelligence','portfolio','benchmark','calibration','settings'];
+  const idx = tabs.indexOf(tab);
+  document.querySelectorAll('.nav-tab')[idx]?.classList.add('active');
+  if (tab === 'benchmark') renderBenchmarkChart();
+}
+
+// ── RESET / CLEAR ──
+function resetPortfolio() {
+  if (!confirm('Reset portfolio to $100,000? All positions and history will be cleared.')) return;
+  STATE.portfolio = {
+    cash: STATE.config.startingCapital,
+    positions: [],
+    history: [],
+    startDate: null,
+    dailyValues: []
+  };
+  STATE.calls = [];
+  saveState();
+  updateAllUI();
+  showToast('Portfolio reset to $100,000', 'info');
+}
+
+function clearAllData() {
+  if (!confirm('Clear ALL data including signals and configuration? This cannot be undone.')) return;
+  localStorage.removeItem('cerebrate_state');
+  location.reload();
+}
+
+// ── TOAST ──
+function showToast(msg, type = 'info') {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.className = `toast ${type} show`;
+  setTimeout(() => toast.classList.remove('show'), 4000);
+}
+
+// ── INIT ──
+loadState();
+document.getElementById('lastRunTime').textContent = STATE.lastRun
+  ? new Date(STATE.lastRun).toLocaleTimeString('en-US', { timeZone: 'America/New_York', hour12: false })
+  : 'Never';
+</script>
+</body>
+</html>
