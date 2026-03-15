@@ -628,42 +628,28 @@ function updateClock() {
 setInterval(updateClock, 1000);
 updateClock();
 
-// ── FETCH NEWS ──
+// ── FETCH NEWS (via Cloudflare Worker to bypass CORS) ──
 async function fetchHeadlines() {
   const key = STATE.config.newsApiKey;
+  const proxyUrl = STATE.config.proxyUrl;
   if (!key) throw new Error('NewsAPI key not configured. Go to Settings.');
+  if (!proxyUrl) throw new Error('Proxy URL not configured. Go to Settings.');
 
-  const url = `https://newsapi.org/v2/top-headlines?language=en&pageSize=40&apiKey=${key}&category=business`;
-  const url2 = `https://newsapi.org/v2/everything?language=en&pageSize=40&sortBy=publishedAt&q=geopolitics+OR+war+OR+sanctions+OR+oil+OR+federal+reserve+OR+inflation+OR+trade+war&apiKey=${key}`;
-
-  const [r1, r2] = await Promise.all([
-    fetch(url).then(r => r.json()),
-    fetch(url2).then(r => r.json())
-  ]);
-
-  const all = [
-    ...(r1.articles || []),
-    ...(r2.articles || [])
-  ];
-
-  // Deduplicate and filter
-  const seen = new Set();
-  const filtered = [];
-  for (const a of all) {
-    const title = a.title || '';
-    if (!title || title === '[Removed]') continue;
-    if (seen.has(title)) continue;
-    seen.add(title);
-    if (isRelevant(title)) {
-      filtered.push({
-        title: title,
-        description: a.description || '',
-        source: a.source?.name || 'Unknown',
-        publishedAt: a.publishedAt,
-        url: a.url
-      });
-    }
+  const response = await fetch(`${proxyUrl}/news?key=${key}`);
+  if (!response.ok) {
+    const err = await response.text();
+    throw new Error(`News fetch error: ${err}`);
   }
+
+  const data = await response.json();
+
+  if (data.error) throw new Error(`NewsAPI error: ${data.error}`);
+
+  const articles = data.articles || [];
+
+  // Apply keyword filter client-side as second pass
+  const filtered = articles.filter(a => isRelevant(a.title));
+
   return filtered.slice(0, 25);
 }
 
