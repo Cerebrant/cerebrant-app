@@ -460,8 +460,8 @@ canvas{width:100%!important}
       <div class="config-title">API Configuration</div>
       <div class="config-grid">
         <div class="config-field">
-          <label>NewsAPI Key</label>
-          <input type="password" id="newsApiKey" placeholder="Your NewsAPI key">
+          <label>GNews API Key</label>
+          <input type="password" id="newsApiKey" placeholder="Your GNews API key (gnews.io)">
         </div>
         <div class="config-field">
           <label>Anthropic API Proxy URL</label>
@@ -632,7 +632,7 @@ updateClock();
 async function fetchHeadlines() {
   const key = STATE.config.newsApiKey;
   const proxyUrl = STATE.config.proxyUrl;
-  if (!key) throw new Error('NewsAPI key not configured. Go to Settings.');
+  if (!key) throw new Error('GNews API key not configured. Go to Settings.');
   if (!proxyUrl) throw new Error('Proxy URL not configured. Go to Settings.');
 
   const response = await fetch(`${proxyUrl}/news?key=${key}`);
