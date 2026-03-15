@@ -548,20 +548,50 @@ let STATE = {
 
 // ── KEYWORD FILTER ──
 const GEO_KEYWORDS = [
-  'war','military','sanction','oil','energy','fed','inflation','recession','gdp',
-  'trade','tariff','central bank','interest rate','opec','iran','russia','china',
-  'ukraine','middle east','nato','missile','nuclear','attack','strike','crisis',
-  'supply chain','gas','brent','crude','wti','treasury','yield','dollar','yen',
-  'euro','currency','election','coup','protest','geopolit','conflict','troops',
-  'semiconductor','chip','export','import','embargo','alliance','summit','g7','g20',
-  'imf','world bank','unemployment','jobs','cpi','pce','earnings','revenue',
-  'bankruptcy','default','debt ceiling','federal reserve','powell','powell',
-  'stocks','market','nasdaq','s&p','dow','correction','rally','selloff',
-  'venezuela','saudi','israel','taiwan','north korea','pakistan','india'
+  // Geopolitical
+  'war','military','sanction','iran','russia','china','ukraine','nato','missile',
+  'nuclear','attack','strike','conflict','troops','coup','crisis','geopolit',
+  'middle east','strait','hormuz','taiwan','israel','north korea','venezuela',
+  'saudi','pakistan','india','opec','alliance','summit','g7','g20',
+  // Macro / Central bank
+  'fed','federal reserve','inflation','recession','gdp','interest rate','rate cut',
+  'rate hike','powell','central bank','imf','world bank','cpi','pce','jobs',
+  'unemployment','stagflat','yield','treasury','deficit','debt',
+  // Energy / Commodities
+  'oil','energy','brent','crude','wti','gas','lng','pipeline','petroleum',
+  'barrel','refin','occidental','exxon','chevron','halliburton','schlumberger',
+  // Trade / Supply chain
+  'trade','tariff','export','import','embargo','supply chain','semiconductor',
+  'chip','rare earth','port','shipping','tanker','freight',
+  // Markets / Finance
+  'stock','market','nasdaq','s&p','dow','etf','rally','selloff','correction',
+  'crash','bull','bear','volatil','earnings','revenue','profit','loss',
+  'bankruptcy','default','bank','goldman','jpmorgan','morgan stanley','wells fargo',
+  'hedge fund','investment','portfolio','bond','dollar','euro','yen','currency',
+  'bitcoin','crypto','gold','silver','commodity',
+  // Corporate signals
+  'merger','acquisition','ipo','layoff','surge','plunge','soar','tumble',
+  'oracle','apple','microsoft','google','amazon','tesla','nvidia','meta',
+  'boeing','lockheed','raytheon','openai',
+  // Economy signals
+  'stimulus','spending','budget','fiscal','monetary','liquidity',
+  'kiyosaki','buffett','yellen','bessent','trump','tariff',
+  // Finance phrases
+  'price target','wall street','investors','shares','quarter','forecast',
+  'outlook','guidance','upgrade','downgrade','analyst','sector','index'
+];
+
+// Skip words — pure noise
+const SKIP_WORDS = [
+  'recipe','fashion','nfl','nba','mlb','nhl','oscars','grammy',
+  'movie','film','album','concert','wedding','pregnancy','diet',
+  'workout','fitness','beauty','makeup','hairstyle','celebrity gossip'
 ];
 
 function isRelevant(headline) {
+  if (!headline) return false;
   const lower = headline.toLowerCase();
+  if (SKIP_WORDS.some(w => lower.includes(w))) return false;
   return GEO_KEYWORDS.some(kw => lower.includes(kw));
 }
 
@@ -938,7 +968,20 @@ async function runAnalysis(isOfficial) {
 
     const headlines = await fetchHeadlines();
     addLog(`Fetched ${headlines.length} relevant headlines after filtering`, 'ok');
-    progressBar.style.width = '20%';
+
+    if (headlines.length === 0) {
+      addLog('No relevant headlines found. Check GNews key or try Live Monitor.', 'skip');
+      progressBar.style.width = '100%';
+      document.getElementById('runMorningBtn').disabled = false;
+      document.getElementById('runMonitorBtn').disabled = false;
+      document.getElementById('liveStatus').textContent = 'Ready';
+      return;
+    }
+
+    // Show sample headlines being processed
+    headlines.slice(0, 3).forEach(h => {
+      addLog(`→ "${h.title.substring(0, 55)}..."`, 'active');
+    });
 
     const results = [];
     const step = 70 / Math.max(headlines.length, 1);
