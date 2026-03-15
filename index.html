@@ -821,18 +821,37 @@ function executeTrade(signal, instrument) {
   const portfolio = STATE.portfolio;
   const config = STATE.config;
 
-  // FIX 1: Never trade TIER3 sources — not reliable enough for portfolio action
-  if (signal.sourceQuality === 'TIER3') return false;
+  // FIX A: Hard block on TIER3 — no exceptions regardless of probability or Kelly
+  if (!signal.sourceQuality || signal.sourceQuality === 'TIER3') return false;
 
-  // FIX 1: Never trade if Kelly is too low — signal not strong enough
+  // FIX A: Block low Kelly regardless of other factors
   if ((signal.kellySize || 0) < 3) return false;
 
-  // FIX 2: Never trade if we already hold this ticker today (deduplication)
-  if (portfolio.positions.find(p => p.ticker === instrument.ticker && p.status === 'open')) {
-    return false;
+  // FIX B: Thesis conflict detector
+  // Don't open a LONG on an instrument if we already have a SHORT, and vice versa
+  const openPositions = portfolio.positions.filter(p => p.status === 'open');
+  const conflictingPosition = openPositions.find(p =>
+    p.ticker === instrument.ticker &&
+    p.direction !== (instrument.direction === 'up' ? 'long' : 'short')
+  );
+  if (conflictingPosition) return false;
+
+  // FIX B: Don't trade if existing portfolio has a contradictory regime thesis
+  // If we hold energy longs (stagflationary thesis), don't also open broad market longs
+  // unless the signal confidence is HIGH
+  if (signal.regime === 'Risk-On' && signal.confidence !== 'HIGH') {
+    const hasStagflationaryLong = openPositions.find(p =>
+      p.direction === 'long' && ['XLE','USO','GLD','XOM','CVX'].includes(p.ticker)
+    );
+    if (hasStagflationaryLong && ['SPY','QQQ','XLY'].includes(instrument.ticker)) {
+      return false; // Don't buy broad market longs when already in stagflationary longs
+    }
   }
 
-  // FIX 2: Never trade if this ticker was already traded today from any signal
+  // Deduplication — already holding this ticker
+  if (openPositions.find(p => p.ticker === instrument.ticker)) return false;
+
+  // Deduplication — traded this ticker today already
   const today = new Date().toDateString();
   const tradedToday = portfolio.history.find(p =>
     p.ticker === instrument.ticker &&
@@ -840,12 +859,11 @@ function executeTrade(signal, instrument) {
   );
   if (tradedToday) return false;
 
-  // Calculate position size
+  // Position sizing
   const kellyPct = Math.min(halfKelly(signal.probability), config.maxPosition) / 100;
   const totalValue = getPortfolioValue();
-  const deployedPct = getDeployedPct();
 
-  if (deployedPct >= config.maxDeployed) return false;
+  if (getDeployedPct() >= config.maxDeployed) return false;
 
   const positionSize = Math.min(
     totalValue * kellyPct,
@@ -854,16 +872,15 @@ function executeTrade(signal, instrument) {
 
   if (positionSize < 500) return false;
 
-  const entryPrice = 100; // Will be updated by price fetch after entry
   const position = {
-    id: Date.now(),
+    id: Date.now() + Math.random(),
     ticker: instrument.ticker,
     name: instrument.name,
     direction: instrument.direction === 'up' ? 'long' : 'short',
-    entryPrice: entryPrice,
-    currentPrice: entryPrice,
+    entryPrice: 100,
+    currentPrice: 100,
     size: positionSize,
-    shares: positionSize / entryPrice,
+    shares: positionSize / 100,
     entryDate: new Date().toISOString(),
     dayCount: 0,
     status: 'open',
@@ -871,6 +888,7 @@ function executeTrade(signal, instrument) {
     probability: signal.probability,
     sourceQuality: signal.sourceQuality,
     kellySize: signal.kellySize,
+    regime: signal.regime,
     signalId: signal.timestamp,
     reason: instrument.reason
   };
@@ -879,7 +897,6 @@ function executeTrade(signal, instrument) {
   portfolio.cash -= positionSize;
 
   if (!portfolio.startDate) portfolio.startDate = new Date().toISOString();
-
   return true;
 }
 
